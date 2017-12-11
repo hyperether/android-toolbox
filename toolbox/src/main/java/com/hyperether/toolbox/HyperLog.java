@@ -20,15 +20,15 @@ import java.util.Locale;
 
 public class HyperLog {
 
+    private static final String TAG = HyperLog.class.getSimpleName();
+
+    private static final int ERROR = 1;
+    private static final int WARN = 2;
+    private static final int DEBUG = 3;
+    private static final int VERBOSE = 4;
+    private static final int INFO = 5;
+
     private static HyperLog instance = null;
-
-    public static final int ERROR = 1;
-    public static final int WARN = 2;
-    public static final int DEBUG = 3;
-    public static final int VERBOSE = 4;
-    public static final int INFO = 5;
-
-    public static final String TAG = "HyperLog";
 
     private HyperLog() {
     }
@@ -40,8 +40,31 @@ public class HyperLog {
         return instance;
     }
 
-    //level : 1==ERROR; 2==WARN; 3==DEBUG; 4==VERBOSE; 5==INFO;
-    public void add(int level, String tag, String method, Throwable ex) {
+    public void d(String tag, String method, String msg) {
+        add(DEBUG, tag, method, msg);
+    }
+
+    public void e(String tag, String method, String msg) {
+        add(ERROR, tag, method, msg);
+    }
+
+    public void e(String tag, String method, Exception msg) {
+        add(ERROR, tag, method, msg);
+    }
+
+    public void i(String tag, String method, String msg) {
+        add(INFO, tag, method, msg);
+    }
+
+    public void v(String tag, String method, String msg) {
+        add(VERBOSE, tag, method, msg);
+    }
+
+    public void w(String tag, String method, String msg) {
+        add(WARN, tag, method, msg);
+    }
+
+    private void add(int level, String tag, String method, Throwable ex) {
         String log = "";
 
         if (ex != null && ex.getMessage() != null)
@@ -52,7 +75,7 @@ public class HyperLog {
         add(level, tag, method, log);
     }
 
-    public void add(int level, String tag, String methodName, String log) {
+    private void add(int level, String tag, String methodName, String log) {
         if (log == null)
             return;
 
@@ -65,25 +88,25 @@ public class HyperLog {
                 sLevel = "ERROR";
                 break;
             case WARN:
-                if (BuildConfig.DEBUG)
+                if (HyperApp.getInstance().isDebugActive())
                     Log.w(tag, log);
                 color = "#ffffb4";
                 sLevel = "WARN";
                 break;
             case DEBUG:
-                if (BuildConfig.DEBUG)
+                if (HyperApp.getInstance().isDebugActive())
                     Log.d(tag, log);
                 color = "#ffccfe";
                 sLevel = "DEBUG";
                 break;
             case VERBOSE:
-                if (BuildConfig.DEBUG)
+                if (HyperApp.getInstance().isDebugActive())
                     Log.v(tag, log);
                 sLevel = "VERBOSE";
                 color = "#b3ffb4";
                 break;
             case INFO:
-                if (BuildConfig.DEBUG)
+                if (HyperApp.getInstance().isDebugActive())
                     Log.i(tag, log);
                 color = "#b3b3fe";
                 sLevel = "INFO";
@@ -91,10 +114,10 @@ public class HyperLog {
         }
 
         try {
-            if (BuildConfig.DEBUG)
+            if (HyperApp.getInstance().isDebugActive())
                 saveToFile(sLevel, tag, methodName, log, color);
         } catch (IOException e) {
-            if (BuildConfig.DEBUG) {
+            if (HyperApp.getInstance().isDebugActive()) {
                 e.printStackTrace();
             }
         }
