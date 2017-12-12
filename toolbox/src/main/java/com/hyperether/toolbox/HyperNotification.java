@@ -2,6 +2,7 @@ package com.hyperether.toolbox;
 
 import android.app.Notification;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.graphics.BitmapFactory;
 
@@ -27,13 +28,16 @@ public class HyperNotification {
                                                          String title,
                                                          String status,
                                                          int iconSmall,
-                                                         int iconLarge) {
-        return new Notification.Builder(context)
+                                                         int iconLarge,
+                                                         PendingIntent intent) {
+        Notification.Builder builder = new Notification.Builder(context)
                 .setContentTitle(title)
                 .setContentText(status)
                 .setSmallIcon(iconSmall)
-                .setLargeIcon(BitmapFactory.decodeResource(context.getResources(), iconLarge))
-                .build();
+                .setLargeIcon(BitmapFactory.decodeResource(context.getResources(), iconLarge));
+        if (intent != null)
+            builder.setContentIntent(intent);
+        return builder.build();
     }
 
     protected void setNotification(Context context, Notification notification) {
