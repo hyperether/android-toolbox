@@ -13,7 +13,7 @@ ext {
     siteUrl = 'https://github.com/hyperether/android-toolbox'
     gitUrl = 'https://github.com/hyperether/android-toolbox.git'
 
-    libraryVersion = '1.0.1'
+    libraryVersion = '1.0.2'
 
     developerId = 'hyperether'
     developerName = 'HyperEther'
@@ -29,8 +29,8 @@ android {
     defaultConfig {
         minSdkVersion 16
         targetSdkVersion 25
-        versionCode 2
-        versionName "1.0.1"
+        versionCode 3
+        versionName "1.0.2"
         project.archivesBaseName = "android-toolbox"
         project.version = android.defaultConfig.versionName
 
