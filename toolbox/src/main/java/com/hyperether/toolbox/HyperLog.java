@@ -81,33 +81,34 @@ public class HyperLog {
 
         String sLevel = "DEBUG";
         String color = "#ffffff";
+        String logTag = tag + "." + methodName;
         switch (level) {
             case ERROR:
-                Log.e(tag, log);
+                Log.e(logTag, log);
                 color = "#ffb3b4";
                 sLevel = "ERROR";
                 break;
             case WARN:
                 if (HyperApp.getInstance().isDebugActive())
-                    Log.w(tag, log);
+                    Log.w(logTag, log);
                 color = "#ffffb4";
                 sLevel = "WARN";
                 break;
             case DEBUG:
                 if (HyperApp.getInstance().isDebugActive())
-                    Log.d(tag, log);
+                    Log.d(logTag, log);
                 color = "#ffccfe";
                 sLevel = "DEBUG";
                 break;
             case VERBOSE:
                 if (HyperApp.getInstance().isDebugActive())
-                    Log.v(tag, log);
+                    Log.v(logTag, log);
                 sLevel = "VERBOSE";
                 color = "#b3ffb4";
                 break;
             case INFO:
                 if (HyperApp.getInstance().isDebugActive())
-                    Log.i(tag, log);
+                    Log.i(logTag, log);
                 color = "#b3b3fe";
                 sLevel = "INFO";
                 break;
