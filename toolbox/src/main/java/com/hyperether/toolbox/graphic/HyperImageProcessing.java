@@ -4,7 +4,12 @@ import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
 import android.graphics.Matrix;
+import android.graphics.Paint;
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffXfermode;
+import android.graphics.Rect;
 import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.Build;
@@ -13,10 +18,13 @@ import android.os.ParcelFileDescriptor;
 import com.hyperether.toolbox.HyperApp;
 import com.hyperether.toolbox.HyperLog;
 import com.hyperether.toolbox.storage.HyperFileManager;
+import com.hyperether.toolbox.streaming.HyperDownloadStreamer;
 
 import java.io.File;
 import java.io.FileDescriptor;
 import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 
 import static android.graphics.Bitmap.createBitmap;
 
@@ -33,8 +41,10 @@ public class HyperImageProcessing {
 
     /**
      * Decode Bitmap From File Path
+     *
      * @param path path
      * @param reqWidth required width
+     *
      * @return bitmap
      */
     public static Bitmap decodeBitmapFromFilePath(String path, int reqWidth) {
@@ -58,8 +68,7 @@ public class HyperImageProcessing {
                 b = BitmapFactory.decodeFile(path, options);
                 return b;
             } catch (OutOfMemoryError error) {
-                HyperLog.getInstance().e(TAG, "decodeBitmapFromFilePath",
-                        "decodeBitmapFromFilePath OutOfMemory: " + error.toString());
+                HyperLog.getInstance().e(TAG, "decodeBitmapFromFilePath", error.toString());
             }
         }
         return null;
@@ -71,6 +80,7 @@ public class HyperImageProcessing {
      * @param res Resources
      * @param id id
      * @param minDimension smaller dimension
+     *
      * @return bitmap
      */
     public static Bitmap decodeBitmapFromResources(Resources res, int id, int minDimension) {
@@ -94,8 +104,7 @@ public class HyperImageProcessing {
                 b = BitmapFactory.decodeResource(res, id, options);
                 return b;
             } catch (OutOfMemoryError error) {
-                HyperLog.getInstance().e(TAG, "decodeBitmapFromResources",
-                        "decodeBitmapFromResources OutOfMemory: " + error.toString());
+                HyperLog.getInstance().e(TAG, "decodeBitmapFromResources", error.toString());
             }
         }
         return null;
@@ -103,11 +112,13 @@ public class HyperImageProcessing {
 
     /**
      * Calculation of the In Sample Size
+     *
      * @param options Bitmap Factory options
      * @param minDimension smaller dimension
+     *
      * @return in sample size
      */
-    private static int calculateInSampleSize(BitmapFactory.Options options, float minDimension) {
+    public static int calculateInSampleSize(BitmapFactory.Options options, float minDimension) {
         float reqHeight;
         float reqWidth;
         // Raw height and width of image
@@ -145,9 +156,12 @@ public class HyperImageProcessing {
 
     /**
      * Read Bitmap From Uri
+     *
      * @param selectedImage selectedImage
      * @param requiredWidth requiredWidth
+     *
      * @return bitmap
+     *
      * @throws Exception exception
      */
     public static Bitmap readBitmapFromUri(Uri selectedImage, int requiredWidth) throws Exception {
@@ -168,12 +182,14 @@ public class HyperImageProcessing {
 
     /**
      * Decode Bitmap From File Descriptor
+     *
      * @param fileDescriptor file Descriptor
      * @param reqWidth required Width
+     *
      * @return bitmap
      */
-    private static Bitmap decodeBitmapFromFileDescriptor(FileDescriptor fileDescriptor,
-                                                         float reqWidth) {
+    public static Bitmap decodeBitmapFromFileDescriptor(FileDescriptor fileDescriptor,
+                                                        float reqWidth) {
         Bitmap b;
         if (fileDescriptor != null) {
             try {
@@ -194,8 +210,7 @@ public class HyperImageProcessing {
                 b = BitmapFactory.decodeFileDescriptor(fileDescriptor, null, options);
                 return b;
             } catch (OutOfMemoryError error) {
-                HyperLog.getInstance().e(TAG, "decodeBitmapFromFileDescriptor",
-                        "decodeBitmapFromFileDescriptor OutOfMemory: " + error.toString());
+                HyperLog.getInstance().e(TAG, "decodeBitmapFromFileDescriptor", error.toString());
             }
         }
         return null;
@@ -224,8 +239,7 @@ public class HyperImageProcessing {
             correctBmp = createBitmap(bmp, 0, 0, bmp.getWidth(), bmp.getHeight(), mat, true);
 
         } catch (OutOfMemoryError oom) {
-            HyperLog.getInstance().e(TAG, "fixImageRotation - OOM",
-                    "rotateImage OutOfMemory " + oom.toString());
+            HyperLog.getInstance().e(TAG, "rotateImage", oom.toString());
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -234,7 +248,9 @@ public class HyperImageProcessing {
 
     /**
      * Get image orientation
+     *
      * @param uri uri
+     *
      * @return orientation
      */
     public static int getOrientation(Uri uri) {
@@ -267,10 +283,12 @@ public class HyperImageProcessing {
 
     /**
      * Save Bitmap To Jpg
+     *
      * @param context context
      * @param finalBitmap finalBitmap
      * @param filename filename
      * @param quality quality
+     *
      * @return image path
      */
     public static String saveBitmapToJpg(Context context, Bitmap finalBitmap, String filename,
@@ -283,9 +301,186 @@ public class HyperImageProcessing {
             out.close();
             return file.getPath();
         } catch (OutOfMemoryError e) {
-            HyperLog.getInstance().e(TAG, "saveBitmapToJpg", "OutOfMemory");
+            HyperLog.getInstance().e(TAG, "saveBitmapToJpg", e.getMessage());
         } catch (Exception e) {
             e.printStackTrace();
+        }
+        return null;
+    }
+
+    /**
+     * Crop To Square
+     *
+     * @param bitmap bitmap
+     *
+     * @return bitmap
+     */
+    public static Bitmap cropToSquare(Bitmap bitmap) {
+        Bitmap b;
+        try {
+            int width = bitmap.getWidth();
+            int height = bitmap.getHeight();
+            int newWidth = (height > width) ? width : height;
+            int newHeight = (height > width) ? height - (height - width) : height;
+            int cropW = (width - height) / 2;
+            cropW = (cropW < 0) ? 0 : cropW;
+            int cropH = (height - width) / 2;
+            cropH = (cropH < 0) ? 0 : cropH;
+            b = createBitmap(bitmap, cropW, cropH, newWidth, newHeight);
+        } catch (OutOfMemoryError error) {
+            HyperLog.getInstance().e(TAG, "cropToSquare", error.toString());
+            b = bitmap;
+        }
+        return b;
+    }
+
+    /**
+     * Get Resized Bitmap
+     *
+     * @param bm bitmap
+     * @param newWidth new width
+     * @param newHeight new height
+     *
+     * @return bitmap
+     */
+    public static Bitmap getResizedBitmap(Bitmap bm, int newWidth, int newHeight) {
+        Bitmap b;
+        if (bm == null)
+            return null;
+        try {
+            int width = bm.getWidth();
+            int height = bm.getHeight();
+            float scaleWidth = ((float) newWidth) / width;
+            float scaleHeight = ((float) newHeight) / height;
+            Matrix matrix = new Matrix();
+            matrix.postScale(scaleWidth, scaleHeight);
+            b = Bitmap.createBitmap(bm, 0, 0, width, height, matrix, false);
+        } catch (OutOfMemoryError error) {
+            HyperLog.getInstance().e(TAG, "getResizedBitmap", error.toString());
+            b = bm;
+        }
+        return b;
+    }
+
+    /**
+     * One bitmap over another
+     *
+     * @param bmp1 first bitmap
+     * @param bmp2 second bitmap
+     * @param left left
+     * @param top top
+     *
+     * @return bitmap
+     */
+    public static Bitmap overlay(Bitmap bmp1, Bitmap bmp2, float left, float top) {
+        try {
+            int maxWidth = (bmp1.getWidth() > bmp2.getWidth() ? bmp1.getWidth() : bmp2.getWidth());
+            int maxHeight = (
+                    bmp1.getHeight() > bmp2.getHeight() ? bmp1.getHeight() : bmp2.getHeight());
+            Bitmap bmOverlay = createBitmap(maxWidth, maxHeight, bmp1.getConfig());
+            Canvas canvas = new Canvas(bmOverlay);
+            canvas.drawBitmap(bmp1, 0, 0, null);
+            canvas.drawBitmap(bmp2, left, top, null);
+            return bmOverlay;
+        } catch (Exception e) {
+            HyperLog.getInstance().e(TAG, "overlay", e);
+            return null;
+        }
+    }
+
+    /**
+     * Get Circle from square
+     *
+     * @param bitmap bitmap
+     *
+     * @return bitmap
+     */
+    public static Bitmap getCircleBitmap(Bitmap bitmap) {
+        Bitmap output = null;
+        try {
+            output = createBitmap(bitmap.getWidth(),
+                    bitmap.getHeight(), Bitmap.Config.ARGB_8888);
+            Canvas canvas = new Canvas(output);
+
+            // transparent stroke
+            final int color = 0x00FFFFFF;
+            final Paint paint = new Paint();
+            final Rect rect = new Rect(0, 0, bitmap.getWidth(), bitmap.getHeight());
+
+            paint.setAntiAlias(true);
+            canvas.drawARGB(0, 0, 0, 0);
+            paint.setColor(color);
+            canvas.drawCircle(bitmap.getWidth() / 2, bitmap.getHeight() / 2,
+                    bitmap.getHeight() / 2, paint);
+            paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_IN));
+            canvas.drawBitmap(bitmap, rect, rect, paint);
+        } catch (OutOfMemoryError oom) {
+            HyperLog.getInstance().e(TAG, "getCircleBitmap", oom.getMessage());
+        }
+        return output;
+    }
+
+    /**
+     * Decode Bitmap From Input Stream - this method must run in background thread
+     *
+     * @param url url
+     * @param reqWidth required width
+     *
+     * @return bitmap
+     */
+    public static Bitmap decodeBitmapFromInputStream(String url, int reqWidth) {
+        Bitmap b;
+        // default sample size value - in most case it will be used the best sample size option
+        // and if it does not, default value will be taken.
+        int sampleSize = 4;
+        try {
+            InputStream stream = HyperDownloadStreamer.getInputStream(url);
+            if (stream != null) {
+                stream.mark(stream.available());
+                // First decode with inJustDecodeBounds=true to check dimensions
+                final BitmapFactory.Options options = new BitmapFactory.Options();
+                options.inJustDecodeBounds = true;
+                BitmapFactory.decodeStream(stream, null, options);
+
+                // Calculate inSampleSize
+                sampleSize = calculateInSampleSize(options, reqWidth);
+                options.inSampleSize = sampleSize;
+                if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.M) {
+                    //noinspection deprecation
+                    options.inDither = true;
+                }
+                // Decode bitmap with inSampleSize set
+                stream.reset();
+                options.inJustDecodeBounds = false;
+                options.inPreferredConfig = Bitmap.Config.RGB_565;
+                b = BitmapFactory.decodeStream(stream, null, options);
+                stream.close();
+                HyperLog.getInstance().d(TAG, "decodeBitmapFromInputStream", "success");
+                return b;
+            } else {
+                HyperLog.getInstance().e(TAG, "decodeBitmapFromInputStream", "fail");
+            }
+        } catch (OutOfMemoryError error) {
+            HyperLog.getInstance().e(TAG, "decodeBitmapFromInputStream", error.getMessage());
+        } catch (IOException e) {
+            try {
+                final BitmapFactory.Options options = new BitmapFactory.Options();
+                if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.M) {
+                    //noinspection deprecation
+                    options.inDither = true;
+                }
+                options.inSampleSize = sampleSize;
+                options.inJustDecodeBounds = false;
+                options.inPreferredConfig = Bitmap.Config.RGB_565;
+                InputStream inputStream = HyperDownloadStreamer.getInputStream(url);
+                b = BitmapFactory.decodeStream(inputStream, null, options);
+                inputStream.close();
+                HyperLog.getInstance().e(TAG, "decodeBitmapFromInputStream",
+                        "success, but with errors: " + e);
+                return b;
+            } catch (IOException e1) {
+                HyperLog.getInstance().e(TAG, "decodeBitmapFromInputStream", e1);
+            }
         }
         return null;
     }
