@@ -402,7 +402,8 @@ public class HyperImageProcessing {
                     bitmap.getHeight(), Bitmap.Config.ARGB_8888);
             Canvas canvas = new Canvas(output);
 
-            final int color = 0xff424242;
+            // transparent stroke
+            final int color = 0x00FFFFFF;
             final Paint paint = new Paint();
             final Rect rect = new Rect(0, 0, bitmap.getWidth(), bitmap.getHeight());
 
@@ -433,7 +434,7 @@ public class HyperImageProcessing {
         // and if it does not, default value will be taken.
         int sampleSize = 4;
         try {
-            InputStream stream = HyperDownloadStreamer.getHttpConnection(url);
+            InputStream stream = HyperDownloadStreamer.getInputStream(url);
             if (stream != null) {
                 stream.mark(stream.available());
                 // First decode with inJustDecodeBounds=true to check dimensions
@@ -471,7 +472,7 @@ public class HyperImageProcessing {
                 options.inSampleSize = sampleSize;
                 options.inJustDecodeBounds = false;
                 options.inPreferredConfig = Bitmap.Config.RGB_565;
-                InputStream inputStream = HyperDownloadStreamer.getHttpConnection(url);
+                InputStream inputStream = HyperDownloadStreamer.getInputStream(url);
                 b = BitmapFactory.decodeStream(inputStream, null, options);
                 inputStream.close();
                 HyperLog.getInstance().e(TAG, "decodeBitmapFromInputStream",

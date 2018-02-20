@@ -19,7 +19,14 @@ public class HyperDownloadStreamer {
 
     private static final String TAG = HyperDownloadStreamer.class.getSimpleName();
 
-    public static InputStream getHttpConnection(String urlString) throws IOException {
+    /**
+     * Get Input Stream
+     *
+     * @param urlString url
+     * @return input stream
+     * @throws IOException exception
+     */
+    public static InputStream getInputStream(String urlString) throws IOException {
 
         InputStream stream = null;
         URL url = new URL(urlString);
@@ -34,7 +41,7 @@ public class HyperDownloadStreamer {
                 stream = httpConnection.getInputStream();
             }
         } catch (Exception ex) {
-            HyperLog.getInstance().e(TAG, "getHttpConnection", ex);
+            HyperLog.getInstance().e(TAG, "getInputStream", ex);
         }
         return stream;
     }
