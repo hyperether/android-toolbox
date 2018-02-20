@@ -79,6 +79,29 @@ public class HyperSharedPrefs {
         }
     }
 
+    public static void savePrefInt(HashMap<String, Integer> map, String prefName) {
+        try {
+            SharedPreferences prefs = getUserSharedPrefs(prefName);
+            SharedPreferences.Editor editor = prefs.edit();
+            for (String key : map.keySet()) {
+                editor.putInt(key, map.get(key));
+            }
+            editor.apply();
+        } catch (Exception e) {
+            HyperLog.getInstance().e(TAG, "savePrefString", e);
+        }
+    }
+
+    public static int getPrefInt(String key, String prefName) {
+        try {
+            SharedPreferences prefs = getUserSharedPrefs(prefName);
+            return prefs.getInt(key, -1);
+        } catch (Exception e) {
+            HyperLog.getInstance().e(TAG, "getPrefString", e);
+        }
+        return -1;
+    }
+
     /**
      * get Long
      *
