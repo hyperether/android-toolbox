@@ -1,6 +1,5 @@
 package com.hyperether.toolbox.graphic;
 
-import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -220,6 +219,70 @@ public class HyperImageProcessing {
     }
 
     /**
+     * Get Bitmap From File And Save If Rotated
+     *
+     * @param pictureFile picture File
+     * @param filename filename
+     * @param quality quality
+     * @param format Compress Format
+     *
+     * @return bitmap
+     */
+    public static Bitmap getBitmapFromFileRotation(File pictureFile,
+                                                   String filename,
+                                                   Bitmap.CompressFormat format,
+                                                   int quality) {
+        Bitmap bitmap = null;
+        if (pictureFile != null) {
+            bitmap = decodeBitmapFromFilePath(pictureFile.getAbsolutePath(), quality);
+            Uri uri = Uri.fromFile(pictureFile);
+            if (uri != null) {
+                int orientation = getOrientation(uri);
+                if (orientation != 0) {
+                    Bitmap rotatedBitmap = rotateImage(bitmap, orientation);
+                    saveBitmapToFile(rotatedBitmap, filename, format, quality);
+                    return rotatedBitmap;
+                }
+            }
+        }
+        return bitmap;
+    }
+
+    /**
+     * Get Bitmap From Uri Rotation and Save to file
+     *
+     * @param uri uri
+     * @param filename filename
+     * @param format format
+     * @param quality quality
+     *
+     * @return bitmap
+     */
+    public static Bitmap getBitmapFromUriSaveRotation(Uri uri,
+                                               String filename,
+                                               Bitmap.CompressFormat format,
+                                               int quality) {
+        Bitmap bitmap = null;
+        if (uri != null) {
+            try {
+                bitmap = readBitmapFromUri(uri, 200);
+                int orientation = getOrientation(uri);
+                if (orientation != 0) {
+                    Bitmap b = rotateImage(bitmap, orientation);
+                    saveBitmapToFile(b, filename, format, quality);
+                    return b;
+                } else {
+                    saveBitmapToFile(bitmap, filename, format, quality);
+                    return bitmap;
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return bitmap;
+    }
+
+    /**
      * Get image orientation
      *
      * @param uri uri
@@ -257,19 +320,20 @@ public class HyperImageProcessing {
     /**
      * Save Bitmap To Jpg
      *
-     * @param context context
      * @param finalBitmap finalBitmap
      * @param filename filename
      * @param quality quality
      *
      * @return image path
      */
-    public static String saveBitmapToJpg(Context context, Bitmap finalBitmap, String filename,
-                                         int quality) {
-        File file = HyperFileManager.getFile(context, filename);
+    public static String saveBitmapToFile(Bitmap finalBitmap,
+                                          String filename,
+                                          Bitmap.CompressFormat format,
+                                          int quality) {
+        File file = HyperFileManager.getFile(filename);
         try {
             FileOutputStream out = new FileOutputStream(file);
-            finalBitmap.compress(Bitmap.CompressFormat.JPEG, quality, out);
+            finalBitmap.compress(format, quality, out);
             out.flush();
             out.close();
             return file.getPath();

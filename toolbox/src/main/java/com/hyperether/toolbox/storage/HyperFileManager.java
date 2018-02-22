@@ -11,6 +11,7 @@ import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import android.util.Log;
 
+import com.hyperether.toolbox.HyperApp;
 import com.hyperether.toolbox.HyperLog;
 
 import java.io.File;
@@ -29,17 +30,18 @@ public class HyperFileManager {
 
     /**
      * Get File Storage Path
-     * @param context context
+     *
      * @return Absolute Path
      */
-    private static String getFileStoragePath(Context context) {
+    private static String getFileStoragePath() {
         // To be safe, you should check that the SDCard is mounted
         // using Environment.getExternalStorageState() before doing this.
         if (!Environment.getExternalStorageState().equalsIgnoreCase(Environment.MEDIA_MOUNTED)) {
             return null;
         }
 
-        File mediaStorageDir = context.getExternalFilesDir(null);
+        File mediaStorageDir = HyperApp.getInstance().getApplicationContext()
+                .getExternalFilesDir(null);
         // This location works best if you want the created images to be shared
         // between applications and persist after your app has been uninstalled.
 
@@ -58,12 +60,13 @@ public class HyperFileManager {
 
     /**
      * Create an get file
-     * @param context context
+     *
      * @param filename filename
+     *
      * @return file
      */
-    public static File getFile(Context context, String filename) {
-        String root = getFileStoragePath(context);
+    public static File getFile(String filename) {
+        String root = getFileStoragePath();
         if (root == null) {
             root = Environment.getExternalStorageDirectory().getPath();
         }
@@ -71,19 +74,17 @@ public class HyperFileManager {
         myDir = new File(root);
         boolean createResult = myDir.mkdirs();
         HyperLog.getInstance().d(TAG, "getFile", " dir created:" + createResult);
-        File file = new File(myDir, filename);
-        if (file.exists()) {
-            boolean deleteResult = file.delete();
-            HyperLog.getInstance().d(TAG, "getFile", " file deleted:" + deleteResult);
-        }
-        return file;
+        return new File(myDir, filename);
     }
 
     /**
      * Get File Path From Uri
+     *
      * @param context context
      * @param uri uri
+     *
      * @return path
+     *
      * @throws URISyntaxException uri syntax exception
      */
     @SuppressLint("NewApi")
@@ -147,7 +148,9 @@ public class HyperFileManager {
 
     /**
      * Is External Storage Document
+     *
      * @param uri uri
+     *
      * @return boolean
      */
     private static boolean isExternalStorageDocument(Uri uri) {
@@ -156,7 +159,9 @@ public class HyperFileManager {
 
     /**
      * Is Downloads Document
+     *
      * @param uri uri
+     *
      * @return boolean
      */
     private static boolean isDownloadsDocument(Uri uri) {
@@ -165,7 +170,9 @@ public class HyperFileManager {
 
     /**
      * Is Media Document
+     *
      * @param uri uri
+     *
      * @return boolean
      */
     private static boolean isMediaDocument(Uri uri) {
