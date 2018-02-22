@@ -259,9 +259,9 @@ public class HyperImageProcessing {
      * @return bitmap
      */
     public static Bitmap getBitmapFromUriSaveRotation(Uri uri,
-                                               String filename,
-                                               Bitmap.CompressFormat format,
-                                               int quality) {
+                                                      String filename,
+                                                      Bitmap.CompressFormat format,
+                                                      int quality) {
         Bitmap bitmap = null;
         if (uri != null) {
             try {
@@ -505,8 +505,10 @@ public class HyperImageProcessing {
 
     /**
      * Prepare Bitmap Options
+     *
      * @param options input options
      * @param reqWidth required width
+     *
      * @return options
      */
     private static BitmapFactory.Options prepareOptions(BitmapFactory.Options options,
