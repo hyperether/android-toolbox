@@ -376,13 +376,11 @@ public class HyperImageProcessing {
             Canvas canvas = new Canvas(output);
 
             // transparent stroke
-            final int color = 0x00FFFFFF;
             final Paint paint = new Paint();
             final Rect rect = new Rect(0, 0, bitmap.getWidth(), bitmap.getHeight());
 
             paint.setAntiAlias(true);
             canvas.drawARGB(0, 0, 0, 0);
-            paint.setColor(color);
             canvas.drawCircle(bitmap.getWidth() / 2, bitmap.getHeight() / 2,
                     bitmap.getHeight() / 2, paint);
             paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_IN));
