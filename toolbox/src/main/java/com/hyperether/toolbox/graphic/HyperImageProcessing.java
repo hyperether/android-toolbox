@@ -52,19 +52,10 @@ public class HyperImageProcessing {
         if (path != null) {
             try {
                 // First decode with inJustDecodeBounds=true to check dimensions
-                final BitmapFactory.Options options = new BitmapFactory.Options();
+                BitmapFactory.Options options = new BitmapFactory.Options();
                 options.inJustDecodeBounds = true;
                 BitmapFactory.decodeFile(path, options);
-
-                // Calculate inSampleSize
-                options.inSampleSize = calculateInSampleSize(options, reqWidth);
-                if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.M) {
-                    //noinspection deprecation
-                    options.inDither = true;
-                }
-                // Decode bitmap with inSampleSize set
-                options.inJustDecodeBounds = false;
-                options.inPreferredConfig = Bitmap.Config.RGB_565;
+                options = prepareOptions(options, reqWidth);
                 b = BitmapFactory.decodeFile(path, options);
                 return b;
             } catch (OutOfMemoryError error) {
@@ -79,28 +70,19 @@ public class HyperImageProcessing {
      *
      * @param res Resources
      * @param id id
-     * @param minDimension smaller dimension
+     * @param reqWidth smaller dimension
      *
      * @return bitmap
      */
-    public static Bitmap decodeBitmapFromResources(Resources res, int id, int minDimension) {
+    public static Bitmap decodeBitmapFromResources(Resources res, int id, int reqWidth) {
         Bitmap b;
         if (res != null && id != -1 && id != 0) {
             try {
                 // First decode with inJustDecodeBounds=true to check dimensions
-                final BitmapFactory.Options options = new BitmapFactory.Options();
+                BitmapFactory.Options options = new BitmapFactory.Options();
                 options.inJustDecodeBounds = true;
                 BitmapFactory.decodeResource(res, id, options);
-
-                // Calculate inSampleSize
-                options.inSampleSize = calculateInSampleSize(options, minDimension);
-                if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.M) {
-                    //noinspection deprecation
-                    options.inDither = true;
-                }
-                // Decode bitmap with inSampleSize set
-                options.inJustDecodeBounds = false;
-                options.inPreferredConfig = Bitmap.Config.RGB_565;
+                options = prepareOptions(options, reqWidth);
                 b = BitmapFactory.decodeResource(res, id, options);
                 return b;
             } catch (OutOfMemoryError error) {
@@ -189,24 +171,15 @@ public class HyperImageProcessing {
      * @return bitmap
      */
     public static Bitmap decodeBitmapFromFileDescriptor(FileDescriptor fileDescriptor,
-                                                        float reqWidth) {
+                                                        int reqWidth) {
         Bitmap b;
         if (fileDescriptor != null) {
             try {
                 // First decode with inJustDecodeBounds=true to check dimensions
-                final BitmapFactory.Options options = new BitmapFactory.Options();
+                BitmapFactory.Options options = new BitmapFactory.Options();
                 options.inJustDecodeBounds = true;
                 BitmapFactory.decodeFileDescriptor(fileDescriptor, null, options);
-
-                // Calculate inSampleSize
-                options.inSampleSize = calculateInSampleSize(options, reqWidth);
-                if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.M) {
-                    //noinspection deprecation
-                    options.inDither = true;
-                }
-                // Decode bitmap with inSampleSize set
-                options.inJustDecodeBounds = false;
-                options.inPreferredConfig = Bitmap.Config.RGB_565;
+                options = prepareOptions(options, reqWidth);
                 b = BitmapFactory.decodeFileDescriptor(fileDescriptor, null, options);
                 return b;
             } catch (OutOfMemoryError error) {
@@ -430,29 +403,19 @@ public class HyperImageProcessing {
      */
     public static Bitmap decodeBitmapFromInputStream(String url, int reqWidth) {
         Bitmap b;
-        // default sample size value - in most case it will be used the best sample size option
-        // and if it does not, default value will be taken.
-        int sampleSize = 4;
+        BitmapFactory.Options options = null;
         try {
             InputStream stream = HyperDownloadStreamer.getInputStream(url);
             if (stream != null) {
                 stream.mark(stream.available());
                 // First decode with inJustDecodeBounds=true to check dimensions
-                final BitmapFactory.Options options = new BitmapFactory.Options();
+                options = new BitmapFactory.Options();
                 options.inJustDecodeBounds = true;
                 BitmapFactory.decodeStream(stream, null, options);
 
-                // Calculate inSampleSize
-                sampleSize = calculateInSampleSize(options, reqWidth);
-                options.inSampleSize = sampleSize;
-                if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.M) {
-                    //noinspection deprecation
-                    options.inDither = true;
-                }
+                options = prepareOptions(options, reqWidth);
                 // Decode bitmap with inSampleSize set
                 stream.reset();
-                options.inJustDecodeBounds = false;
-                options.inPreferredConfig = Bitmap.Config.RGB_565;
                 b = BitmapFactory.decodeStream(stream, null, options);
                 stream.close();
                 HyperLog.getInstance().d(TAG, "decodeBitmapFromInputStream", "success");
@@ -464,16 +427,9 @@ public class HyperImageProcessing {
             HyperLog.getInstance().e(TAG, "decodeBitmapFromInputStream", error.getMessage());
         } catch (IOException e) {
             try {
-                final BitmapFactory.Options options = new BitmapFactory.Options();
-                if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.M) {
-                    //noinspection deprecation
-                    options.inDither = true;
-                }
-                options.inSampleSize = sampleSize;
-                options.inJustDecodeBounds = false;
-                options.inPreferredConfig = Bitmap.Config.RGB_565;
                 InputStream inputStream = HyperDownloadStreamer.getInputStream(url);
-                b = BitmapFactory.decodeStream(inputStream, null, options);
+                b = BitmapFactory
+                        .decodeStream(inputStream, null, prepareOptions(options, reqWidth));
                 inputStream.close();
                 HyperLog.getInstance().e(TAG, "decodeBitmapFromInputStream",
                         "success, but with errors: " + e);
@@ -483,5 +439,31 @@ public class HyperImageProcessing {
             }
         }
         return null;
+    }
+
+    /**
+     * Prepare Bitmap Options
+     * @param options input options
+     * @param reqWidth required width
+     * @return options
+     */
+    private static BitmapFactory.Options prepareOptions(BitmapFactory.Options options,
+                                                        int reqWidth) {
+        // Calculate inSampleSize
+        if (options != null) {
+            options.inSampleSize = calculateInSampleSize(options, reqWidth);
+        } else {
+            options = new BitmapFactory.Options();
+            // set default sample size
+            options.inSampleSize = 4;
+        }
+        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.M) {
+            //noinspection deprecation
+            options.inDither = true;
+        }
+        // Decode bitmap with inSampleSize set
+        options.inJustDecodeBounds = false;
+        options.inPreferredConfig = Bitmap.Config.RGB_565;
+        return options;
     }
 }
