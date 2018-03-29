@@ -98,8 +98,7 @@ public class HyperNotification {
     }
 
     /**
-     * Get notification id by server orderID. If we do not have notificationID for server order ID
-     * return -1;
+     * Get pending notification id
      *
      * @param key notification key
      *
@@ -133,7 +132,7 @@ public class HyperNotification {
     }
 
     /**
-     * Cancel Notification - Method that cancels the notification with msgKey
+     * Cancel Notification
      *
      * @param msgKey msgKey
      */
