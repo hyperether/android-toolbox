@@ -56,10 +56,13 @@ public class HyperNotification {
     }
 
     /**
-     * Set custom Notification
+     * Set Notification
      *
-     * @param type action type
-     * @param singleType only one notification for the same type
+     * @param builder builder
+     * @param intent intent
+     * @param flag notification intent flag
+     * @param type notification action
+     * @param singleType show only one notification for single type
      */
     public void setNotification(Notification.Builder builder,
                                 Intent intent,
