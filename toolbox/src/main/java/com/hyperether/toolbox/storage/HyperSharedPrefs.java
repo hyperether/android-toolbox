@@ -22,6 +22,13 @@ public class HyperSharedPrefs {
     private static final String TAG = HyperSharedPrefs.class.getSimpleName();
     private static final String PREFS_KEY_CURRENT_USER = "currentUser";
 
+    public static void clear(String prefName) {
+        SharedPreferences prefs = getUserSharedPrefs(prefName);
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.clear();
+        editor.apply();
+    }
+
     /**
      * save String
      *
