@@ -93,7 +93,7 @@ public abstract class HyperFragmentStackHandler {
         setFragment(fragment, tag, container, fragmentTransaction);
     }
 
-    private boolean isFragmentManagerDestroyed(){
+    public boolean isFragmentManagerDestroyed(){
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
             return mFragmentManager.isDestroyed();
         }else
