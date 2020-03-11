@@ -1,11 +1,12 @@
 package com.hyperether.toolbox;
 
 import android.os.Build;
-import android.support.annotation.AnimRes;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentTransaction;
-import android.support.v7.app.AppCompatActivity;
+
+import androidx.annotation.AnimRes;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -93,10 +94,10 @@ public abstract class HyperFragmentStackHandler {
         setFragment(fragment, tag, container, fragmentTransaction);
     }
 
-    public boolean isFragmentManagerDestroyed(){
+    public boolean isFragmentManagerDestroyed() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
             return mFragmentManager.isDestroyed();
-        }else
+        } else
             return false;
     }
 
