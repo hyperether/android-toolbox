@@ -1,6 +1,7 @@
 package com.hyperether.toolbox;
 
 import android.content.Context;
+import android.os.Build;
 import android.util.Log;
 
 import java.io.BufferedWriter;
@@ -13,9 +14,11 @@ import java.util.Locale;
 
 /*
  * HyperLog.java
- * Android toolbox
+ * Android toolbox class for error logging. If user needs to send error to server,
+ * should provide OnLogListener listener
  *
  * Created by Slobodan on 12/09/2017
+ * Version 1.1 - 21.03.2020. - added listener
  */
 
 public class HyperLog {
@@ -29,6 +32,7 @@ public class HyperLog {
     private static final int INFO = 5;
 
     private static HyperLog instance = null;
+    private OnLogListener onLogListener;
 
     private HyperLog() {
     }
@@ -64,6 +68,10 @@ public class HyperLog {
         add(WARN, tag, method, msg);
     }
 
+    public void setOnLogListener(OnLogListener onLogListener) {
+        this.onLogListener = onLogListener;
+    }
+
     private void add(int level, String tag, String method, Throwable ex) {
         String log = "";
 
@@ -84,11 +92,15 @@ public class HyperLog {
         String logTag = tag + "." + methodName;
         switch (level) {
             case ERROR:
+                forwardLog(level, "Class: " + tag + " Method: " +
+                        methodName + " msg: " + log);
                 Log.e(logTag, log);
                 color = "#ffb3b4";
                 sLevel = "ERROR";
                 break;
             case WARN:
+                forwardLog(level, "Class: " + tag + " Method: " +
+                        methodName + " msg: " + log);
                 if (HyperApp.getInstance().isDebugActive())
                     Log.w(logTag, log);
                 color = "#ffffb4";
@@ -107,6 +119,8 @@ public class HyperLog {
                 color = "#b3ffb4";
                 break;
             case INFO:
+                forwardLog(level, "Class: " + tag + " Method: " +
+                        methodName + " msg: " + log);
                 if (HyperApp.getInstance().isDebugActive())
                     Log.i(logTag, log);
                 color = "#b3b3fe";
@@ -121,6 +135,32 @@ public class HyperLog {
             if (HyperApp.getInstance().isDebugActive()) {
                 e.printStackTrace();
             }
+        }
+    }
+
+    private void forwardLog(int level, String msg) {
+        String msgType = " ";
+        switch (level) {
+            case ERROR:
+                msgType = " ERROR ";
+                break;
+            case WARN:
+                msgType = " WARN ";
+                break;
+            case DEBUG:
+                msgType = " DEBUG ";
+                break;
+            case VERBOSE:
+                msgType = " VERBOSE ";
+                break;
+            case INFO:
+                msgType = " INFO ";
+                break;
+        }
+
+        String formattedMsg = "DEVICE: " + Build.MODEL + msgType + "MESSAGE: " + msg;
+        if (onLogListener != null) {
+            onLogListener.onLog(formattedMsg);
         }
     }
 
@@ -176,5 +216,9 @@ public class HyperLog {
         htmlStringBuilder.append("<td><b>Method</b></td>");
         htmlStringBuilder.append("<td><b>Message</b></td></tr>");
         return htmlStringBuilder;
+    }
+
+    public interface OnLogListener {
+        void onLog(String msg);
     }
 }
