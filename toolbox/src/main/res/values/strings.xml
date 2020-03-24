@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">Toolbox</string>
+
+    <!--HyperNetworkState alerts-->
+    <string name="alert_error">Error</string>
+    <string name="network_info_not_connected">You are not connected to the internet</string>
+    <string name="ok_btn">OK</string>
 </resources>

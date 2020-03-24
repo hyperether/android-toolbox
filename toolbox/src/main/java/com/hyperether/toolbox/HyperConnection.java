@@ -80,6 +80,13 @@ public class HyperConnection {
                 isConnectionFast(info.getType(), info.getSubtype()));
     }
 
+    public static boolean isNetworkActive() {
+        ConnectivityManager connectivityManager = (ConnectivityManager) HyperApp.getInstance().
+                getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+        return activeNetworkInfo != null && activeNetworkInfo.isConnected();
+    }
+
     /**
      * Check if the connection is fast
      */
