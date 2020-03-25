@@ -12,16 +12,19 @@ import androidx.annotation.RequiresApi;
 
 import com.hyperether.toolbox.HyperApp;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
 public class HyperNetworkState extends ConnectivityManager.NetworkCallback {
     private static HyperNetworkState instance = null;
 
     private final NetworkRequest networkRequest;
 
-    private OnNetworkAvailableListener onNetworkAvailableListener;
-    private OnNetworkLosingListener onNetworkLosingListener;
-    private OnNetworkLostListener onNetworkLostListener;
-    private OnNetworkUnavailableListener onNetworkUnavailableListener;
+    private List<OnNetworkAvailableListener> availableListenerList = new ArrayList<>();
+    private List<OnNetworkLosingListener> losingListenerList = new ArrayList<>();
+    private List<OnNetworkLostListener> lostListenerList = new ArrayList<>();
+    private List<OnNetworkUnavailableListener> unavailableListenerList = new ArrayList<>();
 
     public static HyperNetworkState getInstance() {
         if (instance == null) {
@@ -53,39 +56,47 @@ public class HyperNetworkState extends ConnectivityManager.NetworkCallback {
     }
 
     public void setOnNetworkAvailableListener(OnNetworkAvailableListener listener) {
-        this.onNetworkAvailableListener = listener;
+        availableListenerList.add(listener);
     }
 
     public void setOnNetworkLosingListener(OnNetworkLosingListener listener) {
-        this.onNetworkLosingListener = listener;
+        losingListenerList.add(listener);
     }
 
     public void setOnNetworkLostListener(OnNetworkLostListener listener) {
-        this.onNetworkLostListener = listener;
+        lostListenerList.add(listener);
     }
 
     public void setOnNetworkUnavailableListener(OnNetworkUnavailableListener listener) {
-        this.onNetworkUnavailableListener = listener;
+        unavailableListenerList.add(listener);
     }
 
     @Override
     public void onAvailable(@NonNull Network network) {
-        onNetworkAvailableListener.onAvailable(network);
+        for (OnNetworkAvailableListener listener: availableListenerList) {
+            listener.onAvailable(network);
+        }
     }
 
     @Override
     public void onLosing(@NonNull Network network, int maxMsToLive) {
-        onNetworkLosingListener.onLosing(network, maxMsToLive);
+        for (OnNetworkLosingListener listener: losingListenerList) {
+            listener.onLosing(network, maxMsToLive);
+        }
     }
 
     @Override
     public void onLost(@NonNull Network network) {
-        onNetworkLostListener.onLost(network);
+        for (OnNetworkLostListener listener: lostListenerList) {
+            listener.onLost(network);
+        }
     }
 
     @Override
     public void onUnavailable() {
-        onNetworkUnavailableListener.onUnavailable();
+        for (OnNetworkUnavailableListener listener: unavailableListenerList) {
+            listener.onUnavailable();
+        }
     }
 
     public interface OnNetworkAvailableListener {
