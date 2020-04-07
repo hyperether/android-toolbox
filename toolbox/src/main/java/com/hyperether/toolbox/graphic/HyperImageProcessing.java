@@ -31,7 +31,8 @@ import static android.graphics.Bitmap.createBitmap;
  * HyperImageProcessing - image manipulation, save and load
  *
  * @author Marko Katic
- * @version 1.0 - 19/02/18.
+ * @author Slobodan Prijic
+ * @version 1.1 - 04/07/2020
  */
 
 public class HyperImageProcessing {
@@ -41,9 +42,8 @@ public class HyperImageProcessing {
     /**
      * Decode Bitmap From File Path
      *
-     * @param path path
+     * @param path     path
      * @param reqWidth required width
-     *
      * @return bitmap
      */
     public static Bitmap decodeBitmapFromFilePath(String path, int reqWidth) {
@@ -67,10 +67,9 @@ public class HyperImageProcessing {
     /**
      * Decode Bitmap From Resources
      *
-     * @param res Resources
-     * @param id id
+     * @param res      Resources
+     * @param id       id
      * @param reqWidth smaller dimension
-     *
      * @return bitmap
      */
     public static Bitmap decodeBitmapFromResources(Resources res, int id, int reqWidth) {
@@ -94,9 +93,8 @@ public class HyperImageProcessing {
     /**
      * Calculation of the In Sample Size
      *
-     * @param options Bitmap Factory options
+     * @param options      Bitmap Factory options
      * @param minDimension smaller dimension
-     *
      * @return in sample size
      */
     public static int calculateInSampleSize(BitmapFactory.Options options, float minDimension) {
@@ -140,9 +138,7 @@ public class HyperImageProcessing {
      *
      * @param selectedImage selectedImage
      * @param requiredWidth requiredWidth
-     *
      * @return bitmap
-     *
      * @throws Exception exception
      */
     public static Bitmap readBitmapFromUri(Uri selectedImage, int requiredWidth) throws Exception {
@@ -165,8 +161,7 @@ public class HyperImageProcessing {
      * Decode Bitmap From File Descriptor
      *
      * @param fileDescriptor file Descriptor
-     * @param reqWidth required Width
-     *
+     * @param reqWidth       required Width
      * @return bitmap
      */
     public static Bitmap decodeBitmapFromFileDescriptor(FileDescriptor fileDescriptor,
@@ -222,26 +217,18 @@ public class HyperImageProcessing {
      * Get Bitmap From File And Save If Rotated
      *
      * @param pictureFile picture File
-     * @param filename filename
-     * @param quality quality
-     * @param format Compress Format
-     *
-     * @return bitmap
+     * @param width       required image width. If set to -1, width is original
+     * @return result bitmap
      */
-    public static Bitmap getBitmapFromFileRotation(File pictureFile,
-                                                   String filename,
-                                                   Bitmap.CompressFormat format,
-                                                   int quality) {
+    public static Bitmap getBitmapRotated(File pictureFile, int width) {
         Bitmap bitmap = null;
         if (pictureFile != null) {
-            bitmap = decodeBitmapFromFilePath(pictureFile.getAbsolutePath(), quality);
+            bitmap = decodeBitmapFromFilePath(pictureFile.getAbsolutePath(), width);
             Uri uri = Uri.fromFile(pictureFile);
             if (uri != null) {
                 int orientation = getOrientation(uri);
                 if (orientation != 0) {
-                    Bitmap rotatedBitmap = rotateImage(bitmap, orientation);
-                    saveBitmapToFile(rotatedBitmap, filename, format, quality);
-                    return rotatedBitmap;
+                    return rotateImage(bitmap, orientation);
                 }
             }
         }
@@ -251,28 +238,19 @@ public class HyperImageProcessing {
     /**
      * Get Bitmap From Uri Rotation and Save to file
      *
-     * @param uri uri
-     * @param filename filename
-     * @param format format
-     * @param quality quality
-     *
+     * @param uri   uri
+     * @param width required image width. If set to -1, width is original
      * @return bitmap
      */
-    public static Bitmap getBitmapFromUriSaveRotation(Uri uri,
-                                                      String filename,
-                                                      Bitmap.CompressFormat format,
-                                                      int quality) {
+    public static Bitmap getBitmapRotated(Uri uri, int width) {
         Bitmap bitmap = null;
         if (uri != null) {
             try {
-                bitmap = readBitmapFromUri(uri, 200);
+                bitmap = readBitmapFromUri(uri, width);
                 int orientation = getOrientation(uri);
                 if (orientation != 0) {
-                    Bitmap b = rotateImage(bitmap, orientation);
-                    saveBitmapToFile(b, filename, format, quality);
-                    return b;
+                    return rotateImage(bitmap, orientation);
                 } else {
-                    saveBitmapToFile(bitmap, filename, format, quality);
                     return bitmap;
                 }
             } catch (Exception e) {
@@ -286,7 +264,6 @@ public class HyperImageProcessing {
      * Get image orientation
      *
      * @param uri uri
-     *
      * @return orientation
      */
     public static int getOrientation(Uri uri) {
@@ -321,15 +298,14 @@ public class HyperImageProcessing {
      * Save Bitmap To Jpg
      *
      * @param finalBitmap finalBitmap
-     * @param filename filename
-     * @param quality quality
-     *
+     * @param filename    filename
+     * @param quality     quality
      * @return image path
      */
-    public static String saveBitmapToFile(Bitmap finalBitmap,
-                                          String filename,
-                                          Bitmap.CompressFormat format,
-                                          int quality) {
+    public static String compressBitmapToFile(Bitmap finalBitmap,
+                                              String filename,
+                                              Bitmap.CompressFormat format,
+                                              int quality) {
         File file = HyperFileManager.getFile(filename);
         try {
             FileOutputStream out = new FileOutputStream(file);
@@ -349,7 +325,6 @@ public class HyperImageProcessing {
      * Crop To Square
      *
      * @param bitmap bitmap
-     *
      * @return bitmap
      */
     public static Bitmap cropToSquare(Bitmap bitmap) {
@@ -374,10 +349,9 @@ public class HyperImageProcessing {
     /**
      * Get Resized Bitmap
      *
-     * @param bm bitmap
-     * @param newWidth new width
+     * @param bm        bitmap
+     * @param newWidth  new width
      * @param newHeight new height
-     *
      * @return bitmap
      */
     public static Bitmap getResizedBitmap(Bitmap bm, int newWidth, int newHeight) {
@@ -405,8 +379,7 @@ public class HyperImageProcessing {
      * @param bmp1 first bitmap
      * @param bmp2 second bitmap
      * @param left left
-     * @param top top
-     *
+     * @param top  top
      * @return bitmap
      */
     public static Bitmap overlay(Bitmap bmp1, Bitmap bmp2, float left, float top) {
@@ -429,7 +402,6 @@ public class HyperImageProcessing {
      * Get Circle from square
      *
      * @param bitmap bitmap
-     *
      * @return bitmap
      */
     public static Bitmap getCircleBitmap(Bitmap bitmap) {
@@ -458,9 +430,8 @@ public class HyperImageProcessing {
     /**
      * Decode Bitmap From Input Stream - this method must run in background thread
      *
-     * @param url url
+     * @param url      url
      * @param reqWidth required width
-     *
      * @return bitmap
      */
     public static Bitmap decodeBitmapFromInputStream(String url, int reqWidth) {
@@ -506,20 +477,23 @@ public class HyperImageProcessing {
     /**
      * Prepare Bitmap Options
      *
-     * @param options input options
+     * @param options  input options
      * @param reqWidth required width
-     *
      * @return options
      */
     private static BitmapFactory.Options prepareOptions(BitmapFactory.Options options,
                                                         int reqWidth) {
         // Calculate inSampleSize
         if (options != null) {
-            options.inSampleSize = calculateInSampleSize(options, reqWidth);
+            if (reqWidth > -1) {
+                options.inSampleSize = calculateInSampleSize(options, reqWidth);
+            } else {
+                options.inSampleSize = 1;
+            }
         } else {
             options = new BitmapFactory.Options();
             // set default sample size
-            options.inSampleSize = 4;
+            options.inSampleSize = 1;
         }
         if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.M) {
             //noinspection deprecation
