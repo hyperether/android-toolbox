@@ -1,5 +1,6 @@
 package com.hyperether.toolbox.graphic;
 
+import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -9,10 +10,12 @@ import android.graphics.Paint;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
+import android.graphics.drawable.Drawable;
 import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.Build;
 import android.os.ParcelFileDescriptor;
+import android.provider.MediaStore;
 
 import com.hyperether.toolbox.HyperApp;
 import com.hyperether.toolbox.HyperLog;
@@ -21,6 +24,7 @@ import com.hyperether.toolbox.streaming.HyperDownloadStreamer;
 
 import java.io.File;
 import java.io.FileDescriptor;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -131,6 +135,47 @@ public class HyperImageProcessing {
         }
 
         return inSampleSize;
+    }
+
+    public static Bitmap getBitmapFromUri(Uri uri, int requiredWidth) throws Exception {
+        Bitmap bm = null;
+        Context c = HyperApp.getInstance().getApplicationContext();
+        try {
+            bm = MediaStore.Images.Media.getBitmap(c.getContentResolver(), uri);
+        } catch (IOException e) {
+            HyperLog.getInstance().e(TAG, "-readBitmapFromUri: " + uri, e);
+        }
+        if (bm != null) {
+            if (requiredWidth > 0)
+                bm = getResizedBitmap(bm, requiredWidth, bm.getHeight());
+            return bm;
+        }
+
+        try {
+            bm = BitmapFactory.decodeStream(c.getContentResolver().openInputStream(uri));
+        } catch (FileNotFoundException e) {
+            HyperLog.getInstance().e(TAG, "--readBitmapFromUri: " + uri, e);
+        } catch (OutOfMemoryError oom) {
+            HyperLog.getInstance().e(TAG, "--readBitmapFromUri OOM", oom.getLocalizedMessage());
+        }
+
+        if (bm != null) {
+            if (requiredWidth > 0)
+                bm = getResizedBitmap(bm, requiredWidth, bm.getHeight());
+            return bm;
+        }
+
+        ParcelFileDescriptor parcelFileDescriptor;
+        parcelFileDescriptor = c.getContentResolver().openFileDescriptor(uri, "r");
+        FileDescriptor fileDescriptor = null;
+        if (parcelFileDescriptor != null) {
+            fileDescriptor = parcelFileDescriptor.getFileDescriptor();
+        }
+        if (fileDescriptor != null) {
+            bm = decodeBitmapFromFileDescriptor(fileDescriptor, requiredWidth);
+            parcelFileDescriptor.close();
+        }
+        return bm;
     }
 
     /**
@@ -307,9 +352,46 @@ public class HyperImageProcessing {
                                               Bitmap.CompressFormat format,
                                               int quality) {
         File file = HyperFileManager.getFile(filename);
+        return compressBitmapToFile(finalBitmap, file, format, quality);
+    }
+
+    /**
+     * Save Bitmap To Jpg
+     *
+     * @param bitmap   finalBitmap
+     * @param fileName filename
+     * @param quality  quality
+     * @return image path or NULL
+     */
+    public static String compressBitmapToTempFile(Bitmap bitmap,
+                                                  String fileName,
+                                                  Bitmap.CompressFormat format,
+                                                  int quality) {
+        File file = null;
+        try {
+            file = File.createTempFile(fileName, ".jpg",
+                    HyperApp.getInstance().getApplicationContext().getCacheDir());
+        } catch (IOException e) {
+            HyperLog.getInstance().e(TAG, "compressBitmapToTempFile", e);
+        }
+        return compressBitmapToFile(bitmap, file, format, quality);
+    }
+
+    /**
+     * Save Bitmap To Jpg
+     *
+     * @param bitmap  finalBitmap
+     * @param file    file
+     * @param quality quality
+     * @return image path
+     */
+    public static String compressBitmapToFile(Bitmap bitmap,
+                                              File file,
+                                              Bitmap.CompressFormat format,
+                                              int quality) {
         try {
             FileOutputStream out = new FileOutputStream(file);
-            finalBitmap.compress(format, quality, out);
+            bitmap.compress(format, quality, out);
             out.flush();
             out.close();
             return file.getPath();
@@ -332,18 +414,25 @@ public class HyperImageProcessing {
         try {
             int width = bitmap.getWidth();
             int height = bitmap.getHeight();
-            int newWidth = (height > width) ? width : height;
+            int newWidth = Math.min(height, width);
             int newHeight = (height > width) ? height - (height - width) : height;
             int cropW = (width - height) / 2;
-            cropW = (cropW < 0) ? 0 : cropW;
+            cropW = Math.max(cropW, 0);
             int cropH = (height - width) / 2;
-            cropH = (cropH < 0) ? 0 : cropH;
+            cropH = Math.max(cropH, 0);
             b = createBitmap(bitmap, cropW, cropH, newWidth, newHeight);
         } catch (OutOfMemoryError error) {
             HyperLog.getInstance().e(TAG, "cropToSquare", error.toString());
             b = bitmap;
         }
         return b;
+    }
+
+    public static Bitmap getResizedBitmap(Bitmap bm, int newWidth) {
+        if (bm == null)
+            return bm;
+        float scale = ((float) newWidth) / ((float) bm.getWidth());
+        return getResizedBitmap(bm, newWidth, (int) ((float) bm.getHeight() * scale));
     }
 
     /**
@@ -384,9 +473,8 @@ public class HyperImageProcessing {
      */
     public static Bitmap overlay(Bitmap bmp1, Bitmap bmp2, float left, float top) {
         try {
-            int maxWidth = (bmp1.getWidth() > bmp2.getWidth() ? bmp1.getWidth() : bmp2.getWidth());
-            int maxHeight = (
-                    bmp1.getHeight() > bmp2.getHeight() ? bmp1.getHeight() : bmp2.getHeight());
+            int maxWidth = Math.max(bmp1.getWidth(), bmp2.getWidth());
+            int maxHeight = Math.max(bmp1.getHeight(), bmp2.getHeight());
             Bitmap bmOverlay = createBitmap(maxWidth, maxHeight, bmp1.getConfig());
             Canvas canvas = new Canvas(bmOverlay);
             canvas.drawBitmap(bmp1, 0, 0, null);
@@ -425,6 +513,18 @@ public class HyperImageProcessing {
             HyperLog.getInstance().e(TAG, "getCircleBitmap", oom.getMessage());
         }
         return output;
+    }
+
+    public static Bitmap getBitmap(int drawableRes) {
+        Drawable drawable = HyperApp.getInstance().getApplicationContext().getResources()
+                .getDrawable(drawableRes);
+        Canvas canvas = new Canvas();
+        Bitmap bitmap = Bitmap.createBitmap(drawable.getIntrinsicWidth(),
+                drawable.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
+        canvas.setBitmap(bitmap);
+        drawable.setBounds(0, 0, drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight());
+        drawable.draw(canvas);
+        return bitmap;
     }
 
     /**
@@ -503,5 +603,59 @@ public class HyperImageProcessing {
         options.inJustDecodeBounds = false;
         options.inPreferredConfig = Bitmap.Config.RGB_565;
         return options;
+    }
+
+    public static Bitmap combineImages(Bitmap bmBack,
+                                       Bitmap bmFront,
+                                       float frontRatio,
+                                       float frontOffset) {
+        float width = bmBack.getWidth();
+        Bitmap b = null;
+        if (bmFront != null) {
+            float avatarWith = bmFront.getWidth();
+            float avatarHeight = bmFront.getHeight();
+
+            if (avatarWith != avatarHeight) {
+                bmFront = cropToSquare(bmFront);
+                avatarWith = bmFront.getWidth();
+                avatarHeight = bmFront.getHeight();
+            }
+
+            Bitmap avatarResized;
+            float avWith;
+            float avHeight;
+
+            avWith = width * frontRatio;
+            double k = avWith / avatarWith;
+
+            if (k > 1) {
+                avHeight = (float) k * avatarHeight;
+                if (avatarWith > avatarHeight) {
+                    avHeight = width * frontRatio;
+                    k = avHeight / avatarHeight;
+                    avWith = (float) k * avatarWith;
+                }
+            } else {
+                if (avatarWith > avatarHeight) {
+                    avHeight = width * frontRatio;
+                    k = avHeight / avatarHeight;
+                    avWith = (float) k * avatarWith;
+                } else {
+                    avHeight = (float) k * avatarHeight;
+                }
+            }
+
+            if (avatarWith != 1) {
+                avatarResized = getResizedBitmap(bmFront, (int) avWith,
+                        (int) avHeight);
+            } else {
+                avatarResized = getResizedBitmap(bmFront, (int) (width * frontRatio),
+                        (int) (width * frontRatio));
+            }
+
+            Bitmap bitmap = getCircleBitmap(avatarResized);
+            b = overlay(bmBack, bitmap, width / frontOffset, width / frontOffset);
+        }
+        return b;
     }
 }
