@@ -147,7 +147,7 @@ public class HyperImageProcessing {
         }
         if (bm != null) {
             if (requiredWidth > 0)
-                bm = getResizedBitmap(bm, requiredWidth, bm.getHeight());
+                bm = getResizedBitmap(bm, requiredWidth);
             return bm;
         }
 
@@ -161,7 +161,7 @@ public class HyperImageProcessing {
 
         if (bm != null) {
             if (requiredWidth > 0)
-                bm = getResizedBitmap(bm, requiredWidth, bm.getHeight());
+                bm = getResizedBitmap(bm, requiredWidth);
             return bm;
         }
 
@@ -281,7 +281,7 @@ public class HyperImageProcessing {
     }
 
     /**
-     * Get Bitmap From Uri Rotation and Save to file
+     * Get Bitmap From Uri using FileDescriptor and Rotate if needed
      *
      * @param uri   uri
      * @param width required image width. If set to -1, width is original
@@ -297,6 +297,29 @@ public class HyperImageProcessing {
                     return rotateImage(bitmap, orientation);
                 } else {
                     return bitmap;
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return bitmap;
+    }
+
+    /**
+     * Get Bitmap From Uri using Media/InputStream/FileDescriptor and Rotate if needed
+     *
+     * @param uri   uri
+     * @param width required image width. If set to -1, width is original
+     * @return bitmap
+     */
+    public static Bitmap getBitmapFromUriRotated(Uri uri, int width) {
+        Bitmap bitmap = null;
+        if (uri != null) {
+            try {
+                bitmap = getBitmapFromUri(uri, width);
+                int orientation = HyperImageProcessing.getOrientation(uri);
+                if (orientation != 0) {
+                    bitmap = HyperImageProcessing.rotateImage(bitmap, orientation);
                 }
             } catch (Exception e) {
                 e.printStackTrace();
