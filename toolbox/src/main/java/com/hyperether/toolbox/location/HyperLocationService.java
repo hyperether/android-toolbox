@@ -11,7 +11,6 @@ import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
-import com.hyperether.toolbox.HyperConst;
 
 
 /*
@@ -22,6 +21,10 @@ import com.hyperether.toolbox.HyperConst;
 public abstract class HyperLocationService extends Service {
 
     private static final String TAG = HyperLocationService.class.getSimpleName();
+
+    public static final String LOC_INTERVAL = "loc_interval";
+    public static final String LOC_FASTEST_INTERVAL = "loc_fast_interval";
+    public static final String LOC_DISTANCE = "loc_dist";
 
     /*
         Default update interval, if no value retrieved from service
@@ -61,10 +64,10 @@ public abstract class HyperLocationService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         super.onStartCommand(intent, flags, startId);
-        long interval = intent.getLongExtra(HyperConst.LOC_INTERVAL, UPDATE_INTERVAL_MS);
+        long interval = intent.getLongExtra(LOC_INTERVAL, UPDATE_INTERVAL_MS);
         long fastestUpdate = intent
-                .getLongExtra(HyperConst.LOC_FASTEST_INTERVAL, FASTEST_UPDATE_INTERVAL_MS);
-        float distance = intent.getFloatExtra(HyperConst.LOC_DISTANCE, LOCATION_DISTANCE);
+                .getLongExtra(LOC_FASTEST_INTERVAL, FASTEST_UPDATE_INTERVAL_MS);
+        float distance = intent.getFloatExtra(LOC_DISTANCE, LOCATION_DISTANCE);
         locDistanceUpdateLevel = distance;
         createLocationRequest(interval, fastestUpdate, distance);
         createLocationCallback();

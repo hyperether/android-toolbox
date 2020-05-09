@@ -1,4 +1,4 @@
-package com.hyperether.toolbox;
+package com.hyperether.toolbox.network;
 
 import android.content.Context;
 import android.net.ConnectivityManager;
@@ -73,28 +73,28 @@ public class HyperNetworkState extends ConnectivityManager.NetworkCallback {
 
     @Override
     public void onAvailable(@NonNull Network network) {
-        for (OnNetworkAvailableListener listener: availableListenerList) {
+        for (OnNetworkAvailableListener listener : availableListenerList) {
             listener.onAvailable(network);
         }
     }
 
     @Override
     public void onLosing(@NonNull Network network, int maxMsToLive) {
-        for (OnNetworkLosingListener listener: losingListenerList) {
+        for (OnNetworkLosingListener listener : losingListenerList) {
             listener.onLosing(network, maxMsToLive);
         }
     }
 
     @Override
     public void onLost(@NonNull Network network) {
-        for (OnNetworkLostListener listener: lostListenerList) {
+        for (OnNetworkLostListener listener : lostListenerList) {
             listener.onLost(network);
         }
     }
 
     @Override
     public void onUnavailable() {
-        for (OnNetworkUnavailableListener listener: unavailableListenerList) {
+        for (OnNetworkUnavailableListener listener : unavailableListenerList) {
             listener.onUnavailable();
         }
     }

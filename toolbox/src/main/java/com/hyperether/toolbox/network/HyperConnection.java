@@ -1,4 +1,4 @@
-package com.hyperether.toolbox;
+package com.hyperether.toolbox.network;
 
 import android.Manifest;
 import android.content.Context;
@@ -16,6 +16,9 @@ import android.telephony.CellInfoWcdma;
 import android.telephony.TelephonyManager;
 
 import androidx.core.app.ActivityCompat;
+
+import com.hyperether.toolbox.HyperApp;
+import com.hyperether.toolbox.HyperLog;
 
 import java.util.List;
 

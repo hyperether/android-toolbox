@@ -1,4 +1,4 @@
-package com.hyperether.toolbox;
+package com.hyperether.toolbox.ui;
 
 import android.util.Log;
 import android.view.View;

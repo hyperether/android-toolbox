@@ -1,4 +1,4 @@
-package com.hyperether.toolbox;
+package com.hyperether.toolbox.ui;
 
 import android.os.Build;
 
@@ -7,6 +7,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
+
+import com.hyperether.toolbox.HyperLog;
 
 import java.util.ArrayList;
 import java.util.List;
