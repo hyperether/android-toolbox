@@ -1,7 +1,9 @@
 package com.hyperether.toolbox.graphic;
 
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.res.Resources;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -10,6 +12,7 @@ import android.graphics.Paint;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
+import android.graphics.RectF;
 import android.graphics.drawable.Drawable;
 import android.media.ExifInterface;
 import android.net.Uri;
@@ -259,6 +262,49 @@ public class HyperImageProcessing {
     }
 
     /**
+     * Rotate an image if required.
+     *
+     * @param bitmap
+     * @return
+     */
+    private static Bitmap rotateImage(Context context, Bitmap bitmap) {
+        // Detect rotation
+        int rotation = getLastMediaImageRotation(context);
+        if (rotation != 0) {
+            Matrix matrix = new Matrix();
+            matrix.postRotate(rotation);
+            Bitmap rotatedImg = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(),
+                    matrix, true);
+            bitmap.recycle();
+            return rotatedImg;
+        } else {
+            return bitmap;
+        }
+    }
+
+    /**
+     * Get the rotation of the last image added.
+     *
+     * @param context context
+     * @return rotation for last image in MediaStore
+     */
+    private static int getLastMediaImageRotation(Context context) {
+        int rotation = 0;
+        ContentResolver content = context.getContentResolver();
+        Cursor mediaCursor = content.query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                new String[]{"orientation", "date_added"}, null, null, "date_added desc");
+
+        if (mediaCursor != null && mediaCursor.getCount() != 0) {
+            if (mediaCursor.moveToNext()) {
+                rotation = mediaCursor.getInt(0);
+            }
+            mediaCursor.close();
+        }
+
+        return rotation;
+    }
+
+    /**
      * Get Bitmap From File And Save If Rotated
      *
      * @param pictureFile picture File
@@ -317,9 +363,9 @@ public class HyperImageProcessing {
         if (uri != null) {
             try {
                 bitmap = getBitmapFromUri(uri, width);
-                int orientation = HyperImageProcessing.getOrientation(uri);
+                int orientation = getOrientation(uri);
                 if (orientation != 0) {
-                    bitmap = HyperImageProcessing.rotateImage(bitmap, orientation);
+                    bitmap = rotateImage(bitmap, orientation);
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -340,9 +386,11 @@ public class HyperImageProcessing {
             try {
                 ExifInterface exif = null;
 
+                Context context = HyperApp.getInstance().getApplicationContext();
                 String realImgPath;
-                realImgPath = HyperFileManager
-                        .getFilePathFromUri(HyperApp.getInstance().getApplicationContext(), uri);
+                realImgPath = HyperFileManager.getFilePathFromUri(context,
+                        uri,
+                        context.getCacheDir());
 
                 File pictureFile = null;
                 if (realImgPath != null) {
@@ -483,6 +531,36 @@ public class HyperImageProcessing {
             b = bm;
         }
         return b;
+    }
+
+    public static Bitmap downScaleBitmap(Bitmap bitmap, int maxWidth, int maxHeight) {
+        if (bitmap != null) {
+            Bitmap scaledBitmap = null;
+            float scale = 1;
+            float scaleH = (float) maxHeight / bitmap.getHeight();
+            float scaleW = (float) maxWidth / bitmap.getWidth();
+            if (scaleH < 1 || scaleW < 1)
+                scale = Math.min(scaleH, scaleW);
+
+            if (scale < 1) {
+                int adaptWidth = (int) (bitmap.getWidth() * scale);
+                int adaptHeight = (int) (bitmap.getHeight() * scale);
+                try {
+                    scaledBitmap = Bitmap
+                            .createScaledBitmap(bitmap, adaptWidth, adaptHeight, false);
+                } catch (OutOfMemoryError error) {
+
+                }
+            } else {
+                scaledBitmap = bitmap;
+            }
+
+            if (scaledBitmap != null) {
+                if (scaledBitmap.getHeight() <= maxHeight && scaledBitmap.getWidth() <= maxWidth)
+                    return scaledBitmap;
+            }
+        }
+        return null;
     }
 
     /**
@@ -680,5 +758,40 @@ public class HyperImageProcessing {
             b = overlay(bmBack, bitmap, width / frontOffset, width / frontOffset);
         }
         return b;
+    }
+
+    /**
+     * Method that creates rounded edges on image
+     *
+     * @param bitmap        original bitmap
+     * @param densityPixels rounded pixels * density
+     * @return Bitmap
+     */
+    public static Bitmap getRoundedCornerBitmap(Context context,
+                                                Bitmap bitmap,
+                                                int densityPixels,
+                                                int color) {
+
+        Bitmap output = null;
+        if (bitmap != null) {
+            output = Bitmap
+                    .createBitmap(bitmap.getWidth(), bitmap.getHeight(), Bitmap.Config.ARGB_8888);
+            Canvas canvas = new Canvas(output);
+
+            final Paint paint = new Paint();
+            final Rect rect = new Rect(0, 0, bitmap.getWidth(), bitmap.getHeight());
+            final RectF rectF = new RectF(rect);
+            final float roundPx =
+                    densityPixels * context.getResources().getDisplayMetrics().density;
+
+            paint.setAntiAlias(true);
+            canvas.drawARGB(0, 0, 0, 0);
+            paint.setColor(color);
+            canvas.drawRoundRect(rectF, roundPx, roundPx, paint);
+
+            paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_IN));
+            canvas.drawBitmap(bitmap, rect, rect, paint);
+        }
+        return output;
     }
 }
