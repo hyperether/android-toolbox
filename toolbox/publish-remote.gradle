@@ -48,15 +48,15 @@ afterEvaluate {
                     url = 'https://github.com/hyperether/android-toolbox'
                     licenses {
                         license {
-                            name = 'MIT license'
-                            url = 'https://opensource.org/licenses/MIT'
+                            name = 'GPL-3.0 license'
+                            url = 'https://github.com/hyperether/android-toolbox/blob/master/LICENSE'
                         }
                     }
                     developers {
                         developer {
-                            id = 'sandra.jandric91'
-                            name = 'Sandra Jandric'
-                            email = 'sandra.jandric91@gmail.com'
+                            id = 'hyperether'
+                            name = 'HyperEther'
+                            email = 'info@hyperether.com'
                         }
                     }
 
