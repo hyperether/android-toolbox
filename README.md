@@ -23,6 +23,6 @@ In app gradle add dependency
 
 ```groovy
     dependencies {
-    implementation 'com.hyperether:android-toolbox:1.0.17'
+    implementation 'com.hyperether:android-toolbox:1.0.18'
 }
 ```
