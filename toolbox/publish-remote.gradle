@@ -21,6 +21,15 @@ artifacts {
 group = PUBLISH_GROUP_ID
 version = PUBLISH_VERSION
 
+android {
+    publishing {
+        singleVariant("release") {
+            withSourcesJar()
+            withJavadocJar()
+        }
+    }
+}
+
 afterEvaluate {
     publishing {
         publications {
@@ -38,7 +47,7 @@ afterEvaluate {
                     from components.java
                 }
 
-                artifact androidSourcesJar
+//                artifact androidSourcesJar
 //                artifacts javaDocJar
 
                 // Mostly self-explanatory metadata
