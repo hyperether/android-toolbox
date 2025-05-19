@@ -131,7 +131,7 @@ public class HyperLocationHandler {
         Context context = HyperApp.getInstance().getApplicationContext();
         Intent intent = new Intent(context, LocationUpdatesBroadcastReceiver.class);
         intent.setAction(LocationUpdatesBroadcastReceiver.ACTION_PROCESS_UPDATES);
-        return PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        return PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_MUTABLE);
     }
 
     /**
